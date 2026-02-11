@@ -1,0 +1,30 @@
+body { width: 220px; padding: 15px; font-family: 'Segoe UI', sans-serif; text-align: center; }
+h2 { margin: 0 0 10px; font-size: 18px; color: #1a1a1a; }
+.desc { font-size: 12px; color: #666; margin-bottom: 15px; line-height: 1.4; }
+hr { border: 0; border-top: 1px solid #eee; margin: 15px 0; }
+
+.primary-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: #00d2d3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.primary-btn:hover { background-color: #00b2b2; }
+
+.support-text { font-size: 11px; color: #888; margin-bottom: 8px; }
+.donate-btn {
+  display: block;
+  padding: 8px;
+  background-color: #ff6b6b;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.donate-btn:hover { background-color: #ee5253; }
