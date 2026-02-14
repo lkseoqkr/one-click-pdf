@@ -3,7 +3,7 @@
   "name": "One-Click-PDF",
   "version": "5.0",
   "description": "The selected area will be printed in high quality and will turn off automatically.",
-  "permissions": ["activeTab", "scripting"],
+  "permissions": ["activeTab"],
   "background": {
     "service_worker": "background.js"
   },
