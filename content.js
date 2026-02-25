@@ -1,18 +1,64 @@
 let isActive = false;
 let hoverElement = null;
 
+// ---- Copy protection unlock helpers ----
+function allowEvent(e) {
+  e.stopImmediatePropagation();
+}
+
+function unlockPage() {
+  // 1) CSS: force user-select on every element
+  if (!document.getElementById("pdf-unlock-style")) {
+    const style = document.createElement("style");
+    style.id = "pdf-unlock-style";
+    style.textContent =
+      "* { user-select: text !important; -webkit-user-select: text !important; }";
+    (document.head || document.documentElement).appendChild(style);
+  }
+  // 2) JS: intercept site event handlers that block selection / right-click / copy
+  window.addEventListener("selectstart",  allowEvent, true);
+  window.addEventListener("contextmenu",  allowEvent, true);
+  window.addEventListener("copy",         allowEvent, true);
+}
+
+function lockPage() {
+  const style = document.getElementById("pdf-unlock-style");
+  if (style) style.remove();
+  window.removeEventListener("selectstart",  allowEvent, true);
+  window.removeEventListener("contextmenu",  allowEvent, true);
+  window.removeEventListener("copy",         allowEvent, true);
+}
+// ----------------------------------------
+
 // 1. Receive state (ON/OFF)
 chrome.runtime.onMessage.addListener((request) => {
   if (request.action === "toggleState") {
     isActive = request.status;
-    if (!isActive && hoverElement) {
-      hoverElement.classList.remove("pdf-target-highlight");
-      hoverElement = null;
+    if (isActive) {
+      unlockPage();
+    } else {
+      lockPage();
+      if (hoverElement) {
+        hoverElement.classList.remove("pdf-target-highlight");
+        hoverElement = null;
+      }
     }
   }
 });
 
-// 2. Mouseover (highlight)
+// 2. ESC key to cancel
+document.addEventListener("keydown", (e) => {
+  if (!isActive || e.key !== "Escape") return;
+  isActive = false;
+  if (hoverElement) {
+    hoverElement.classList.remove("pdf-target-highlight");
+    hoverElement = null;
+  }
+  lockPage();
+  chrome.runtime.sendMessage({ action: "turnOff" });
+}, true);
+
+// 3. Mouseover (highlight)
 document.addEventListener("mouseover", (e) => {
   if (!isActive) return;
   if (hoverElement === e.target) return;
@@ -37,6 +83,7 @@ document.addEventListener("click", (e) => {
   // [Important] Deactivate immediately (prevent reselection)
   isActive = false;
   hoverElement = null;
+  lockPage();
 
   // Send "turn off icon" message to background
   chrome.runtime.sendMessage({ action: "turnOff" });
