@@ -1,36 +1,71 @@
 let isActive = false;
 let hoverElement = null;
 
-// ---- Copy protection unlock helpers ----
+// ---- Copy-protection unlock ----
 function allowEvent(e) {
   e.stopImmediatePropagation();
 }
 
 function unlockPage() {
-  // 1) CSS: force user-select on every element
   if (!document.getElementById("pdf-unlock-style")) {
     const style = document.createElement("style");
     style.id = "pdf-unlock-style";
-    style.textContent =
-      "* { user-select: text !important; -webkit-user-select: text !important; }";
+    style.textContent = "* { user-select: text !important; -webkit-user-select: text !important; }";
     (document.head || document.documentElement).appendChild(style);
   }
-  // 2) JS: intercept site event handlers that block selection / right-click / copy
-  window.addEventListener("selectstart",  allowEvent, true);
-  window.addEventListener("contextmenu",  allowEvent, true);
-  window.addEventListener("copy",         allowEvent, true);
+  document.querySelectorAll("*").forEach(el => {
+    el.style.userSelect = "";
+    el.style.webkitUserSelect = "";
+    ["onselectstart", "oncontextmenu", "oncopy", "ondragstart"].forEach(attr => {
+      el.removeAttribute(attr);
+      el[attr] = null;
+    });
+  });
+  window.addEventListener("selectstart", allowEvent, true);
+  window.addEventListener("contextmenu", allowEvent, true);
+  window.addEventListener("copy",        allowEvent, true);
 }
 
 function lockPage() {
   const style = document.getElementById("pdf-unlock-style");
   if (style) style.remove();
-  window.removeEventListener("selectstart",  allowEvent, true);
-  window.removeEventListener("contextmenu",  allowEvent, true);
-  window.removeEventListener("copy",         allowEvent, true);
+  window.removeEventListener("selectstart", allowEvent, true);
+  window.removeEventListener("contextmenu", allowEvent, true);
+  window.removeEventListener("copy",        allowEvent, true);
 }
-// ----------------------------------------
+// --------------------------------
 
-// 1. Receive state (ON/OFF)
+// ---- Element isolation for selection PDF ----
+// Hides all siblings along the ancestor chain so only the selected element
+// remains visible. Background then prints the live tab via CDP (full CSS intact)
+// instead of extracting HTML, which loses selector/variable context.
+let _isolatedItems = [];
+
+function isolateForPDF(element) {
+  _isolatedItems = [];
+  let el = element;
+  while (el && el !== document.body) {
+    const parent = el.parentElement;
+    if (parent) {
+      Array.from(parent.children).forEach(sibling => {
+        if (sibling !== el) {
+          _isolatedItems.push({ el: sibling, prevDisplay: sibling.style.display });
+          sibling.style.display = "none";
+        }
+      });
+    }
+    el = parent;
+  }
+}
+
+function restoreFromIsolation() {
+  _isolatedItems.forEach(({ el, prevDisplay }) => {
+    el.style.display = prevDisplay;
+  });
+  _isolatedItems = [];
+}
+// ---------------------------------------------
+
 chrome.runtime.onMessage.addListener((request) => {
   if (request.action === "toggleState") {
     isActive = request.status;
@@ -44,9 +79,12 @@ chrome.runtime.onMessage.addListener((request) => {
       }
     }
   }
+
+  if (request.action === "restoreIsolation") {
+    restoreFromIsolation();
+  }
 });
 
-// 2. ESC key to cancel
 document.addEventListener("keydown", (e) => {
   if (!isActive || e.key !== "Escape") return;
   isActive = false;
@@ -58,80 +96,31 @@ document.addEventListener("keydown", (e) => {
   chrome.runtime.sendMessage({ action: "turnOff" });
 }, true);
 
-// 3. Mouseover (highlight)
 document.addEventListener("mouseover", (e) => {
   if (!isActive) return;
   if (hoverElement === e.target) return;
-  
   if (hoverElement) hoverElement.classList.remove("pdf-target-highlight");
-  
   hoverElement = e.target;
   hoverElement.classList.add("pdf-target-highlight");
 }, true);
 
-// 3. Click (execute print and auto deactivate)
 document.addEventListener("click", (e) => {
   if (!isActive || !hoverElement) return;
 
-  // Block click event propagation
   e.preventDefault();
   e.stopPropagation();
 
   const target = hoverElement;
   target.classList.remove("pdf-target-highlight");
 
-  // [Important] Deactivate immediately (prevent reselection)
   isActive = false;
   hoverElement = null;
   lockPage();
-
-  // Send "turn off icon" message to background
   chrome.runtime.sendMessage({ action: "turnOff" });
 
-  // Open print window (high-quality vector rendering)
-  openPrintWindow(target);
-
+  // Hide all siblings along the ancestor chain so only this element remains,
+  // then ask background to print the live tab via CDP.
+  // Background will send "restoreIsolation" after the PDF download starts.
+  isolateForPDF(target);
+  chrome.runtime.sendMessage({ action: "printSelectionDirect" });
 }, true);
-
-
-// 4. Open new window and print (preserving original quality)
-function openPrintWindow(element) {
-  const styles = document.querySelectorAll("link[rel='stylesheet'], style");
-  let cssString = "";
-  styles.forEach(style => cssString += style.outerHTML);
-
-  const htmlContent = element.outerHTML;
-  const win = window.open('', '_blank');
-
-  if (!win) {
-    alert("Please disable your popup blocker.");
-    return;
-  }
-
-  win.document.write(`
-    <html>
-      <head>
-        <title>Print Selection</title>
-        <base href="${window.location.href}">
-        ${cssString}
-        <style>
-          body { margin: 20px; background: white; }
-          @media print { body { -webkit-print-color-adjust: exact; } }
-        </style>
-      </head>
-      <body>${htmlContent}</body>
-    </html>
-  `);
-  
-  win.document.close();
-
-  // Wait for resources to load, then print
-  win.onload = function() {
-    setTimeout(() => {
-      win.focus();
-      win.print();
-      // Uncomment below to close the window after printing
-      // win.close(); 
-    }, 500);
-  };
-}

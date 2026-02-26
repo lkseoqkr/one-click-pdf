@@ -16,6 +16,20 @@ hr { border: 0; border-top: 1px solid #eee; margin: 15px 0; }
 }
 .primary-btn:hover { background-color: #00b2b2; }
 
+.secondary-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: transparent;
+  color: #00d2d3;
+  border: 2px solid #00d2d3;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+  margin-top: 8px;
+}
+.secondary-btn:hover { background-color: #00d2d3; color: white; }
+
 .support-text { font-size: 11px; color: #888; margin-bottom: 8px; }
 .donate-btn {
   display: block;
