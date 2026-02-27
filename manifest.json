@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "One Click PDF - Webpage to PDF Converter",
   "version": "5.2",
-  "description": "Save any part of a webpage or the entire page as a high-quality vector PDF with a single click.",
+  "description": "Convert any webpage or selected area to a high-quality vector PDF with one click. No sign-up, no watermark.",
   "permissions": ["activeTab", "debugger", "downloads"],
   "content_security_policy": {
     "extension_pages": "default-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'"
