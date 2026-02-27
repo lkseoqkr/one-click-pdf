@@ -32,13 +32,53 @@ function restoreFromIsolation() {
 }
 // ---------------------------------------------
 
+// ---- Cat scratch animation ----
+function showCatAnimation() {
+  const style = document.createElement("style");
+  style.textContent = `
+    @keyframes _pdf_cat_swipe_ {
+      0%   { transform: translate(0, 0)       rotate(-35deg) scale(0.7); opacity: 0; }
+      12%  { transform: translate(-15px, 15px) rotate(-28deg) scale(1.3); opacity: 1; }
+      22%  { transform: translate(8px, -8px)   rotate(-32deg) scale(1.2); }
+      38%  { transform: translate(-20px, 20px) rotate(-22deg) scale(1.4); }
+      100% { transform: translate(-120vw, 90vh) rotate(15deg) scale(0.5); opacity: 0; }
+    }
+    ._pdf_cat_paw_ {
+      position: fixed !important;
+      top: 8vh !important;
+      right: -10px !important;
+      font-size: 88px !important;
+      line-height: 1 !important;
+      z-index: 2147483647 !important;
+      pointer-events: none !important;
+      user-select: none !important;
+      animation: _pdf_cat_swipe_ 0.75s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+      filter: drop-shadow(3px 3px 8px rgba(0,0,0,0.4)) !important;
+    }
+  `;
+  document.head.appendChild(style);
+
+  const paw = document.createElement("div");
+  paw.className = "_pdf_cat_paw_";
+  paw.textContent = "🐾";
+  document.body.appendChild(paw);
+
+  setTimeout(() => { paw.remove(); style.remove(); }, 800);
+}
+// --------------------------------
+
 chrome.runtime.onMessage.addListener((request) => {
   if (request.action === "toggleState") {
     isActive = request.status;
+    if (isActive) showCatAnimation();
     if (!isActive && hoverElement) {
       hoverElement.classList.remove("pdf-target-highlight");
       hoverElement = null;
     }
+  }
+
+  if (request.action === "showCatAnimation") {
+    showCatAnimation();
   }
 
   if (request.action === "restoreIsolation") {

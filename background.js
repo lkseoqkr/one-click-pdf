@@ -4,6 +4,7 @@ chrome.runtime.onMessage.addListener((request, sender) => {
   } else if (request.action === "turnOff") {
     updateBadge(false);
   } else if (request.action === "fullPagePDF") {
+    chrome.tabs.sendMessage(request.tabId, { action: "showCatAnimation" }).catch(() => {});
     printTabAsPDF(request.tabId, "fullpage");
   } else if (request.action === "printSelectionDirect") {
     // content.js has already hidden all siblings — print the live tab via CDP
