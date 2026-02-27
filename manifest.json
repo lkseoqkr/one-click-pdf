@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "One Click PDF - Webpage to PDF Converter",
-  "version": "5.2",
+  "version": "5.1",
   "description": "Convert any webpage or selected area to a high-quality vector PDF with one click. No sign-up, no watermark.",
   "permissions": ["activeTab", "debugger", "downloads"],
   "content_security_policy": {
