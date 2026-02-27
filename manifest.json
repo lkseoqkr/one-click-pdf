@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "One-Click-PDF",
-  "version": "5.0",
+  "version": "5.1",
   "description": "Save any part of a webpage or the entire page as a high-quality vector PDF with a single click.",
   "permissions": ["activeTab", "debugger", "downloads"],
   "content_security_policy": {
