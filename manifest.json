@@ -2,10 +2,10 @@
   "manifest_version": 3,
   "name": "One-Click-PDF",
   "version": "5.0",
-  "description": "The selected area will be printed in high quality and will turn off automatically.",
-  "permissions": ["activeTab", "tabs", "scripting", "debugger", "downloads", "storage"],
+  "description": "Save any part of a webpage or the entire page as a high-quality vector PDF with a single click.",
+  "permissions": ["activeTab", "debugger", "downloads"],
   "content_security_policy": {
-    "extension_pages": "default-src 'self'; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline' https: data:; img-src * data: blob:; font-src * data:"
+    "extension_pages": "default-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'"
   },
   "background": {
     "service_worker": "background.js"

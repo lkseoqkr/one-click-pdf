@@ -1,44 +1,10 @@
 let isActive = false;
 let hoverElement = null;
 
-// ---- Copy-protection unlock ----
-function allowEvent(e) {
-  e.stopImmediatePropagation();
-}
-
-function unlockPage() {
-  if (!document.getElementById("pdf-unlock-style")) {
-    const style = document.createElement("style");
-    style.id = "pdf-unlock-style";
-    style.textContent = "* { user-select: text !important; -webkit-user-select: text !important; }";
-    (document.head || document.documentElement).appendChild(style);
-  }
-  document.querySelectorAll("*").forEach(el => {
-    el.style.userSelect = "";
-    el.style.webkitUserSelect = "";
-    ["onselectstart", "oncontextmenu", "oncopy", "ondragstart"].forEach(attr => {
-      el.removeAttribute(attr);
-      el[attr] = null;
-    });
-  });
-  window.addEventListener("selectstart", allowEvent, true);
-  window.addEventListener("contextmenu", allowEvent, true);
-  window.addEventListener("copy",        allowEvent, true);
-}
-
-function lockPage() {
-  const style = document.getElementById("pdf-unlock-style");
-  if (style) style.remove();
-  window.removeEventListener("selectstart", allowEvent, true);
-  window.removeEventListener("contextmenu", allowEvent, true);
-  window.removeEventListener("copy",        allowEvent, true);
-}
-// --------------------------------
-
 // ---- Element isolation for selection PDF ----
 // Hides all siblings along the ancestor chain so only the selected element
-// remains visible. Background then prints the live tab via CDP (full CSS intact)
-// instead of extracting HTML, which loses selector/variable context.
+// remains visible. Background then prints the live tab via CDP (full CSS intact).
+// Background sends "restoreIsolation" after the PDF download starts.
 let _isolatedItems = [];
 
 function isolateForPDF(element) {
@@ -69,14 +35,9 @@ function restoreFromIsolation() {
 chrome.runtime.onMessage.addListener((request) => {
   if (request.action === "toggleState") {
     isActive = request.status;
-    if (isActive) {
-      unlockPage();
-    } else {
-      lockPage();
-      if (hoverElement) {
-        hoverElement.classList.remove("pdf-target-highlight");
-        hoverElement = null;
-      }
+    if (!isActive && hoverElement) {
+      hoverElement.classList.remove("pdf-target-highlight");
+      hoverElement = null;
     }
   }
 
@@ -92,7 +53,6 @@ document.addEventListener("keydown", (e) => {
     hoverElement.classList.remove("pdf-target-highlight");
     hoverElement = null;
   }
-  lockPage();
   chrome.runtime.sendMessage({ action: "turnOff" });
 }, true);
 
@@ -115,12 +75,8 @@ document.addEventListener("click", (e) => {
 
   isActive = false;
   hoverElement = null;
-  lockPage();
   chrome.runtime.sendMessage({ action: "turnOff" });
 
-  // Hide all siblings along the ancestor chain so only this element remains,
-  // then ask background to print the live tab via CDP.
-  // Background will send "restoreIsolation" after the PDF download starts.
   isolateForPDF(target);
   chrome.runtime.sendMessage({ action: "printSelectionDirect" });
 }, true);
