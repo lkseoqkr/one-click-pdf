@@ -1,34 +1,47 @@
-# One-Click-PDF
+# One Click PDF
 
-Select any part of a webpage and save it as a high-quality PDF with a single click.
+Select any element or the full page, and save it as a high-quality PDF with a single click — no print dialog, no watermark, no sign-up.
 
 ## Features
 
-- **Visual Element Selector** — Hover over any element on a page to highlight it with a red outline
-- **One-Click PDF** — Click the highlighted element to open the browser's print dialog, ready to save as PDF
-- **High-Quality Output** — Preserves original styles, colors, and layout using vector-based rendering
-- **Auto Deactivate** — Selection mode turns off automatically after printing, so it never interferes with normal browsing
+- **Element Selection** — Hover over any element to highlight it, then click to save just that section as a PDF
+- **Full Page PDF** — Save the entire page as a single continuous PDF with one click
+- **Direct PDF Download** — Uses Chrome DevTools Protocol (CDP) to generate and download the PDF silently, without opening a print dialog
+- **Pixel-Perfect Output** — Screen CSS is preserved (backgrounds, colors, layout) with zero margins and no reflow
+- **Auto Deactivate** — Selection mode turns off after each use and can be cancelled anytime with `Esc`
+- **Cat Paw Animation** — A playful animation plays while the PDF is being generated 🐾
 
 ## How It Works
 
-1. Click the One-Click-PDF icon in the Chrome toolbar
-2. Click **Start Selection** in the popup
+### Element Selection PDF
+
+1. Click the **One Click PDF** icon in the Chrome toolbar
+2. Click **✨ Start Selection**
 3. Hover over the page — elements are highlighted as you move the cursor
 4. Click the element you want to save
-5. The browser print dialog opens — choose **Save as PDF** as the destination
+5. The PDF is generated and a Save dialog opens automatically
+
+### Full Page PDF
+
+1. Click the **One Click PDF** icon in the Chrome toolbar
+2. Click **📄 Full Page PDF**
+3. The entire page is captured and a Save dialog opens automatically
+
+> Press `Esc` at any time to cancel selection mode.
 
 ## Permissions Justification
 
 | Permission | Why it's needed |
 |---|---|
-| `activeTab` | Access the current tab's content so the user can select and print an element |
-| `scripting` | Inject the content script that enables element highlighting and print functionality |
+| `activeTab` | Access the current tab to identify which tab to print |
+| `debugger` | Attach Chrome DevTools Protocol to generate the PDF via `Page.printToPDF` — used only during PDF export |
+| `downloads` | Trigger the Save dialog so the user can choose where to save the generated PDF |
 
-This extension does **not** access any data in the background. Permissions are only used when the user explicitly activates the selection mode.
+This extension does **not** collect any data or run in the background. All permissions are used only when the user explicitly initiates a PDF action.
 
 ## Privacy Policy
 
-One-Click-PDF respects your privacy:
+One Click PDF respects your privacy:
 
 - **No data collection** — This extension does not collect, store, or transmit any personal data or browsing history
 - **No remote servers** — All processing happens locally in your browser. No network requests are made by this extension
@@ -47,21 +60,23 @@ Select any part of a webpage and save it as a high-quality PDF with one click.
 
 ### Detailed Description
 
-One-Click-PDF lets you select any element on a webpage and instantly save it as a high-quality PDF.
+One Click PDF lets you save any webpage or element as a pixel-perfect PDF in one click — no print dialog, no watermark, no sign-up required.
 
-Simply click the extension icon, hover to highlight the section you want, and click to print. The browser's built-in print dialog opens with your selection ready to be saved as a PDF. Original styles, colors, and layout are preserved for professional-quality output.
+**Element Selection Mode:** Click the extension icon, hover to highlight the section you want, then click to export. Only the selected element is captured, with all original styles, colors, and layout preserved.
 
-Selection mode deactivates automatically after each use, so it never interferes with your normal browsing.
+**Full Page Mode:** Capture the entire page as a single continuous PDF with no page breaks cutting through your content.
 
-Perfect for saving articles, receipts, images, tables, code snippets, or any specific section of a webpage without capturing the entire page.
+Both modes use Chrome's built-in PDF engine via DevTools Protocol, so the output is vector-quality and faithful to what you see on screen.
+
+Perfect for saving articles, receipts, tables, code snippets, images, or any specific section of a webpage — without capturing the entire page.
 
 ### Required Store Assets
 
 | Asset | Specification |
 |---|---|
-| Store Icon | 128 x 128 px PNG |
-| Screenshots | 1280 x 800 or 640 x 400 px (up to 5) |
-| Small Promo Tile | 440 x 280 px |
+| Store Icon | 128 × 128 px PNG |
+| Screenshots | 1280 × 800 or 640 × 400 px (up to 5) |
+| Small Promo Tile | 440 × 280 px |
 
 ## Installation (Development)
 
@@ -69,17 +84,17 @@ Perfect for saving articles, receipts, images, tables, code snippets, or any spe
 2. Open `chrome://extensions/` in Chrome
 3. Enable **Developer mode** (toggle in the top-right corner)
 4. Click **Load unpacked** and select the project folder
-5. The One-Click-PDF icon appears in the toolbar
+5. The One Click PDF icon appears in the toolbar
 
 ## Project Structure
 
 ```
 one-click-pdf/
 ├── manifest.json    # Extension manifest (Manifest V3)
-├── background.js    # Service worker for badge and state management
-├── content.js       # Element highlighting and print logic
+├── background.js    # Service worker — CDP PDF generation and download
+├── content.js       # Element highlighting, DOM isolation, and cat animation
 ├── popup.html       # Extension popup UI
-├── popup.js         # Popup button handler
+├── popup.js         # Popup button handlers
 ├── popup.css        # Popup styles
 ├── style.css        # Highlight overlay styles
 ├── icon16.png       # Toolbar icon
