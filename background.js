@@ -44,6 +44,11 @@ async function printTabAsPDF(tabId, filenamePrefix = "fullpage") {
     const paperWidth  = contentSize.width / 96;
     const paperHeight = Math.max(contentSize.height, evalResult.value || 0) / 96 + 3;
 
+    // Remove the cat animation element before printing so it doesn't appear in the PDF
+    await chrome.debugger.sendCommand({ tabId }, "Runtime.evaluate", {
+      expression: `document.querySelectorAll('._pdf_cat_paw_').forEach(e => e.remove())`
+    });
+
     const pdfResult = await chrome.debugger.sendCommand({ tabId }, "Page.printToPDF", {
       printBackground: true,
       paperWidth,
